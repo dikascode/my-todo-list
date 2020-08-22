@@ -1,6 +1,7 @@
 package com.tutorial.mytodolistapp
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +24,14 @@ class DashboardAdapter(val context: Context, val list: MutableList<ToDo>) :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.toDoName.text = list[position].name
+
+        holder.toDoName.setOnClickListener {
+            //Send data to Item Activity with Intent
+            val intent = Intent(context, ItemActivity::class.java)
+            intent.putExtra(INTENT_TODO_ID, list[position].id)
+            intent.putExtra(INTENT_TODO_NAME, list[position].name)
+            context.startActivity(intent)
+        }
     }
 
     class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {

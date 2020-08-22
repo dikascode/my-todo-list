@@ -1,31 +1,38 @@
 package com.tutorial.mytodolistapp
 
+import android.app.AlertDialog
 import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.MenuItem
 import android.widget.EditText
-import androidx.appcompat.app.AlertDialog
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.tutorial.mytodolistapp.DTO.ToDo
-import kotlinx.android.synthetic.main.activity_dashboard.*
+import com.tutorial.mytodolistapp.DTO.ToDoItem
+import kotlinx.android.synthetic.main.activity_item.*
 
-class DashboardActivity : AppCompatActivity() {
+class ItemActivity : AppCompatActivity() {
+
     lateinit var dbHandler: DBHandler
-    lateinit var recyclerView: RecyclerView
+
+    var todoId : Long = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_dashboard)
+        setContentView(R.layout.activity_item)
         setSupportActionBar(item_toolbar)
-        title = "Dashboard"
 
-        //create object of database
+        //Enable back button
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeButtonEnabled(true)
+        supportActionBar?.title = intent.getStringExtra(INTENT_TODO_NAME)
+        todoId = intent.getLongExtra(INTENT_TODO_ID, -1)
+
         dbHandler = DBHandler(this)
 
-        //set layout manager for recyclerview
-        recyclerView = findViewById(R.id.rv_item)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        //Set layout manager
+        rv_item.layoutManager = LinearLayoutManager(this)
 
         fab_item.setOnClickListener {
             //setup alert dialog
@@ -40,9 +47,11 @@ class DashboardActivity : AppCompatActivity() {
             dialog.setPositiveButton("Add") { _: DialogInterface, _: Int ->
                 //Add Data into database
                 if (toDoName.text.isNotEmpty()) {
-                    val toDo = ToDo()
-                    toDo.name = toDoName.text.toString()
-                    dbHandler.addToDo(toDo)
+                    val item = ToDoItem()
+                    item.itemName = toDoName.text.toString()
+                    item.toDoId = todoId
+                    item.isCompleted = false
+                    dbHandler.addToDoItem(item)
                     refreshList()
                 }
             }
@@ -54,6 +63,7 @@ class DashboardActivity : AppCompatActivity() {
 
             dialog.show()
         }
+
     }
 
     override fun onResume() {
@@ -61,11 +71,16 @@ class DashboardActivity : AppCompatActivity() {
         super.onResume()
     }
 
-    //Refresh recyclerview after adding item
     private fun refreshList() {
-        recyclerView.adapter = DashboardAdapter(this, dbHandler.getToDos())
+        rv_item.adapter = ItemAdapter(this, dbHandler, dbHandler.getToDoItems(todoId))
     }
 
-
-
+    //Kill current activity on click of back button
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return if (item?.itemId == android.R.id.home) {
+            finish()
+            true
+        } else
+            super.onOptionsItemSelected(item)
+    }
 }
